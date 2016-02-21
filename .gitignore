@@ -1,0 +1,7 @@
+.bundle/
+*.log
+pkg/
+*~
+.env
+*.gem
+.DS_Store
