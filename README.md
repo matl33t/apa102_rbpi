@@ -20,7 +20,19 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Simple blinker:
+```ruby
+require 'apa102_rbpi'
+include Apa102Rbpi
+
+led = Apa102.new(1)
+loop do
+  led.set_pixel!(0, 0xffffff)
+  sleep 1
+  led.set_pixel!(0, 0)
+  sleep 1
+end
+```
 
 ## Development
 
