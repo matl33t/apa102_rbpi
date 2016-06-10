@@ -1,6 +1,8 @@
 module Apa102Rbpi
   class Strip
 
+    require 'set'
+
     attr_reader :mirrors, :head, :tail, :num_leds
     attr_accessor :led_frame_rgb_offsets, :brightness
 
@@ -85,9 +87,20 @@ module Apa102Rbpi
       show!
     end
 
+    def set_all_pixels(color, brightness = @brightness)
+      @num_leds.times do |led_idx|
+        set_pixel(led_idx, color, brightness)
+      end
+    end
+
+    def set_all_pixels!(color, brightness = @brightness)
+      set_all_pixels(color, brightness)
+      show!
+    end
+
     def clear
-      @num_leds.times do |l|
-        set_pixel(l, 0)
+      @num_leds.times do |led_idx|
+        set_pixel(led_idx, 0)
       end
     end
 
@@ -100,9 +113,10 @@ module Apa102Rbpi
       (brightness & 0b00011111) | 0b11100000
     end
 
+    private
+
     def base
       Apa102Rbpi.base
     end
   end
 end
-
