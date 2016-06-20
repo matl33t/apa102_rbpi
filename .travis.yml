@@ -1,0 +1,11 @@
+sudo: false
+language: ruby
+rvm:
+  - 2.2.0
+cache: bundler
+before_install:
+  - gem install bundler -v 1.9
+script:
+  - bundle exec rspec
+notifications:
+  email: false

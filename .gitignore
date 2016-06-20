@@ -5,3 +5,6 @@ pkg/
 .env
 *.gem
 .DS_Store
+
+*.gem
+Gemfile.lock
