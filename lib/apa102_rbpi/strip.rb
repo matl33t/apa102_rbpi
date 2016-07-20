@@ -48,11 +48,12 @@ module Apa102Rbpi
       base.show!
     end
 
-    def set_pixel(pos, color, brightness = @brightness)
+    def set_pixel(pos, color, brightness = nil)
       q = [self]
       seen = Set.new([self])
       frames = base.led_frames
       while(substrip = q.pop)
+        led_frame_hdr = ((brightness || substrip.brightness) & 0b00011111) | 0b11100000
         substrip.mirrors.each do |mirror|
           unless seen.include?(mirror)
             q.push(mirror)
@@ -67,12 +68,12 @@ module Apa102Rbpi
               end
 
         if color.is_a?(Integer)
-          frames[idx] = substrip.led_frame_hdr(brightness)
+          frames[idx] = led_frame_hdr
           frames[idx + substrip.led_frame_rgb_offsets[:red]] = (color & 0xFF0000) >> 16
           frames[idx + substrip.led_frame_rgb_offsets[:green]] = (color & 0x00FF00) >> 8
           frames[idx + substrip.led_frame_rgb_offsets[:blue]] = (color & 0x0000FF)
         elsif color.is_a?(Array)
-          frames[idx] = substrip.led_frame_hdr(brightness)
+          frames[idx] = led_frame_hdr
           frames[idx + substrip.led_frame_rgb_offsets[:red]] = color[0]
           frames[idx + substrip.led_frame_rgb_offsets[:green]] = color[1]
           frames[idx + substrip.led_frame_rgb_offsets[:blue]] = color[2]
@@ -107,10 +108,6 @@ module Apa102Rbpi
     def clear!
       clear
       show!
-    end
-
-    def led_frame_hdr(brightness = @brightness)
-      (brightness & 0b00011111) | 0b11100000
     end
 
     private
