@@ -49,6 +49,14 @@ module Apa102Rbpi
     end
 
     def set_pixel(pos, color, brightness = nil)
+      hex_color = if color.is_a?(Integer)
+                    true
+                  elsif color.is_a?(Array)
+                    false
+                  else
+                    raise 'Invalid color'
+                  end
+
       q = [self]
       seen = Set.new([self])
       frames = base.led_frames
@@ -67,18 +75,16 @@ module Apa102Rbpi
                 4 * ((pos + substrip.head) % base.num_leds)
               end
 
-        if color.is_a?(Integer)
+        if hex_color
           frames[idx] = led_frame_hdr
           frames[idx + substrip.led_frame_rgb_offsets[:red]] = (color & 0xFF0000) >> 16
           frames[idx + substrip.led_frame_rgb_offsets[:green]] = (color & 0x00FF00) >> 8
           frames[idx + substrip.led_frame_rgb_offsets[:blue]] = (color & 0x0000FF)
-        elsif color.is_a?(Array)
+        else
           frames[idx] = led_frame_hdr
           frames[idx + substrip.led_frame_rgb_offsets[:red]] = color[0]
           frames[idx + substrip.led_frame_rgb_offsets[:green]] = color[1]
           frames[idx + substrip.led_frame_rgb_offsets[:blue]] = color[2]
-        else
-          raise 'Invalid color'
         end
       end
     end
