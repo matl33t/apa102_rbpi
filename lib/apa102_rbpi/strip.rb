@@ -57,35 +57,42 @@ module Apa102Rbpi
                     raise 'Invalid color'
                   end
 
-      q = [self]
-      seen = Set.new([self])
-      frames = base.led_frames
-      while(substrip = q.pop)
-        led_frame_hdr = ((brightness || substrip.brightness) & 0b00011111) | 0b11100000
-        substrip.mirrors.each do |mirror|
-          unless seen.include?(mirror)
-            q.push(mirror)
-            seen.add(mirror)
+      base_strip = base
+      if @mirrors.empty?
+        set_color_helper(base, pos, color, hex_color, brightness)
+      else
+        q = [self]
+        seen = Set.new([self])
+        while(substrip = q.pop)
+          substrip.mirrors.each do |mirror|
+            unless seen.include?(mirror)
+              q.push(mirror)
+              seen.add(mirror)
+            end
+            substrip.set_color_helper(base_strip, pos, color, hex_color, brightness)
           end
         end
+      end
+    end
 
-        idx = if true || substrip.reversed?
-                4 * ((substrip.tail - pos) % base.num_leds)
-              else
-                4 * ((pos + substrip.head) % base.num_leds)
-              end
+    def set_color_helper(base_strip, pos, color, hex_color, brightness)
+      led_frame_hdr = ((brightness || @brightness) & 0b00011111) | 0b11100000
+      idx = if @reverse
+              4 * ((@tail - pos) % base.num_leds)
+            else
+              4 * ((pos + @head) % base.num_leds)
+            end
 
-        if hex_color
-          frames[idx] = led_frame_hdr
-          frames[idx + substrip.led_frame_rgb_offsets[:red]] = (color & 0xFF0000) >> 16
-          frames[idx + substrip.led_frame_rgb_offsets[:green]] = (color & 0x00FF00) >> 8
-          frames[idx + substrip.led_frame_rgb_offsets[:blue]] = (color & 0x0000FF)
-        else
-          frames[idx] = led_frame_hdr
-          frames[idx + substrip.led_frame_rgb_offsets[:red]] = color[0]
-          frames[idx + substrip.led_frame_rgb_offsets[:green]] = color[1]
-          frames[idx + substrip.led_frame_rgb_offsets[:blue]] = color[2]
-        end
+      if hex_color
+        base_strip.led_frames[idx] = led_frame_hdr
+        base_strip.led_frames[idx + @led_frame_rgb_offsets[:red]] = (color & 0xFF0000) >> 16
+        base_strip.led_frames[idx + @led_frame_rgb_offsets[:green]] = (color & 0x00FF00) >> 8
+        base_strip.led_frames[idx + @led_frame_rgb_offsets[:blue]] = (color & 0x0000FF)
+      else
+        base_strip.led_frames[idx] = led_frame_hdr
+        base_strip.led_frames[idx + @led_frame_rgb_offsets[:red]] = color[0]
+        base_strip.led_frames[idx + @led_frame_rgb_offsets[:green]] = color[1]
+        base_strip.led_frames[idx + @led_frame_rgb_offsets[:blue]] = color[2]
       end
     end
 
