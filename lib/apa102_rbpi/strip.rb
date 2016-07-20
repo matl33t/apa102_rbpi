@@ -49,10 +49,8 @@ module Apa102Rbpi
     end
 
     def set_pixel(pos, color, brightness = @brightness)
-      q = [self]
-      seen = Set.new([self])
       frames = base.led_frames
-      while(substrip = q.pop)
+        substrip = self
         substrip.mirrors.each do |mirror|
           unless seen.include?(mirror)
             q.push(mirror)
@@ -79,7 +77,6 @@ module Apa102Rbpi
         else
           raise 'Invalid color'
         end
-      end
     end
 
     def set_pixel!(pos, color, brightness = @brightness)
