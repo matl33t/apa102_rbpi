@@ -35,7 +35,7 @@ module Apa102Rbpi
     def simulate=(bool)
       @simulate = bool
       if @simulate
-        @interface = ::Apa102Rbpi::SpiSimulator #TODO
+        @interface = ::Apa102Rbpi::SpiSimulator
       else
         @interface = PiPiper::Spi
       end

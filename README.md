@@ -1,4 +1,4 @@
-# Apa102Rbpi
+# Apa102Rbpi [![Build Status](https://travis-ci.org/matl33t/apa102_rbpi.svg?branch=master)](https://travis-ci.org/matl33t/apa102_rbpi)
 Simple library to drive APA102/Dotstar LEDs using a Raspberry Pi
 
 ## Setup

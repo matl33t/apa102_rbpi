@@ -1,2 +1,6 @@
-# spec/lib/apa102_rbpi/spi_simulator_spec.rb
-# TO DO
+require 'spec_helper'
+
+module Apa102Rbpi
+  describe SpiSimulator do
+  end
+end

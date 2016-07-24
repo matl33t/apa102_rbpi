@@ -1,6 +1,10 @@
 require 'spec_helper'
 
 describe Apa102Rbpi do
+  before(:each) do
+    Apa102Rbpi.clear_config!
+  end
+
   describe '#configure' do
     it 'clears out any existing configuration before applying new settings' do
       Apa102Rbpi.configure do |config|
@@ -13,13 +17,13 @@ describe Apa102Rbpi do
       expect(Apa102Rbpi.base.brightness).to eq 20
 
       Apa102Rbpi.configure do |config|
-        config.brightness = 30
+        config.num_leds = 10
+        config.brightness = 10
         config.simulate = true
       end
 
-      expect(Apa102Rbpi.base.num_leds).to eq 1
-      expect(Apa102Rbpi.base.brightness).to eq 30
-
+      expect(Apa102Rbpi.base.num_leds).to eq 10
+      expect(Apa102Rbpi.base.brightness).to eq 10
     end
 
     it 'allows a block to be passed in to set configurations' do
@@ -28,19 +32,19 @@ describe Apa102Rbpi do
         config.num_leds = 17
         config.brightness = 12
         config.spi_hz = 400000
-        config.led_frame_rgb_offsets = {red: 1, green: 2, blue: 3}
+        config.led_frame_rgb_offsets = { red: 1, green: 2, blue: 3 }
       end
 
       expect(Apa102Rbpi.base.num_leds).to eq 17
       expect(Apa102Rbpi.base.simulate).to eq true
       expect(Apa102Rbpi.base.brightness).to eq 12
       expect(Apa102Rbpi.base.spi_hz).to eq 400000
-      expect(Apa102Rbpi.base.led_frame_rgb_offsets).to eq({red: 1, green: 2, blue: 3})
+      expect(Apa102Rbpi.base.led_frame_rgb_offsets).to eq({ red: 1, green: 2, blue: 3 })
     end
   end
 
   describe '#clear_config!' do
-    it 'creates a new base and strip object with default config' do
+    it 'clears out the current base configuration and strip object' do
       Apa102Rbpi.configure do |config|
         config.num_leds = 20
         config.simulate = true

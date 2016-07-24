@@ -1,24 +1,20 @@
-# spec/lib/apa102_rbpi/strip_spec.rb
+require 'spec_helper'
 
-describe 'Strip' do
-
-  before(:all) do
-    Apa102Rbpi.configure do |config|
-      config.num_leds = 6
-      config.simulate = true
-    end
+describe Apa102Rbpi::Strip do
+  let(:red)    {{ hex: 0xFF0000, rgb: [255, 0, 0] }}
+  let(:green)  {{ hex: 0x00FF00, rgb: [0, 255, 0] }}
+  let(:blue)   {{ hex: 0x0000FF, rgb: [0, 0, 255] }}
+  let(:default_brightness) {{ led_frame: [255], value: 31 }}
+  let(:test_brightness) {{ led_frame: [234], value: 10 }}
+  let(:strip) do
+    Apa102Rbpi::Strip.new(3, { brightness: default_brightness[:value] })
   end
-
-  let(:strip) { Apa102Rbpi.strip }
-
-  it 'should be an instance of a strip' do
-    expect(strip.class).to eq Apa102Rbpi::Strip
-  end
+  let(:base) { Apa102Rbpi.base }
 
   describe 'instance variables' do
     it 'should have a num_leds reader' do
       expect(strip.num_leds).to be_a_kind_of Integer
-      expect(strip.num_leds).to eq 6
+      expect(strip.num_leds).to eq 3
     end
 
     it 'should not write num_leds' do
@@ -27,7 +23,7 @@ describe 'Strip' do
 
     it 'should have a head and tail reader' do
       expect(strip.head).to eq 0
-      expect(strip.tail).to eq 5
+      expect(strip.tail).to eq 2
     end
 
     it 'should not be able to write head and tail' do
@@ -41,108 +37,100 @@ describe 'Strip' do
     end
   end
 
-  describe 'pixel setting' do
+  describe '#set_pixel' do
     before(:each) do
       strip.clear
     end
 
-    it 'should be able to set each pixel with an rgb array' do
-      (0..5).each do |n|
-        strip.set_pixel(n, [n,n,n])
+    it 'lets each pixel color to be set with an rgb array' do
+      strip.set_pixel(0, red[:rgb])
+      strip.set_pixel(1, green[:rgb])
+      strip.set_pixel(2, blue[:rgb])
+
+      expect(base.led_frames[frame_at_pixel(0)]).to eq default_brightness[:led_frame] + red[:rgb]
+      expect(base.led_frames[frame_at_pixel(1)]).to eq default_brightness[:led_frame] + green[:rgb]
+      expect(base.led_frames[frame_at_pixel(2)]).to eq default_brightness[:led_frame] + blue[:rgb]
+    end
+
+    it 'lets each pixel color to be set with a hexadecimal number' do
+      strip.set_pixel(0, red[:hex])
+      strip.set_pixel(1, green[:hex])
+      strip.set_pixel(2, blue[:hex])
+
+      expect(base.led_frames[frame_at_pixel(0)]).to eq default_brightness[:led_frame] + red[:rgb]
+      expect(base.led_frames[frame_at_pixel(1)]).to eq default_brightness[:led_frame] + green[:rgb]
+      expect(base.led_frames[frame_at_pixel(2)]).to eq default_brightness[:led_frame] + blue[:rgb]
+    end
+
+    it 'lets each pixel be set with a unique brightness' do
+      strip.set_pixel(0, red[:rgb], test_brightness[:value])
+      expect(base.led_frames[frame_at_pixel(0)]).to eq test_brightness[:led_frame] + red[:rgb]
+    end
+
+    context 'reverse mode' do
+      before(:each) do
+        strip.reverse
       end
-
-      expect(Apa102Rbpi.base.led_frames).to eq [ 255, 0, 0, 0, 255, 1, 1, 1,
-                                                 255, 2, 2, 2, 255, 3, 3, 3,
-                                                 255, 4, 4, 4, 255, 5, 5, 5 ]
-    end
-
-    it 'should be able to pass in a brightness with an array' do
-      strip.set_pixel(0, [255,255,255], 10)
-      expect(Apa102Rbpi.base.led_frames[0..3]).to eq [234, 255, 255, 255]
-    end
-
-    it 'should be able to set each pixel with hex' do
-      (0..5).each do |n|
-        strip.set_pixel(n, 0x4d4dff)
-      end
-
-      expect(Apa102Rbpi.base.led_frames).to eq [ 255, 255, 77, 77, 255, 255, 77, 77,
-                                                 255, 255, 77, 77, 255, 255, 77, 77,
-                                                 255, 255, 77, 77, 255, 255, 77, 77 ]
-    end
-
-    it 'should be able to set a brightness with hex' do
-      strip.set_pixel(0, 0x4d4dff, 10)
-      expect(Apa102Rbpi.base.led_frames[0..3]).to eq [234, 255, 77, 77]
-    end
-
-    describe 'set all pixels' do
-      it 'should be able to set all the pixels at once' do
-        strip.set_all_pixels([10,10,10], 10)
-
-        expect(Apa102Rbpi.base.led_frames).to eq [ 234, 10, 10, 10, 234, 10, 10, 10,
-                                                   234, 10, 10, 10, 234, 10, 10, 10,
-                                                   234, 10, 10, 10, 234, 10, 10, 10 ]
-      end
-    end
-
-    describe 'reversing' do
       after(:each) do
+        # set strip to normal
         strip.reverse
       end
 
-      it 'should know whether it is reversed' do
-        expect(strip.reversed?).to eq false
-        strip.reverse
-        expect(strip.reversed?).to eq true
-      end
-
-      it 'should be able to set a reversed pixel' do
-        strip.reverse
-        strip.set_pixel(0, [255,255,255])
-        expect(Apa102Rbpi.base.led_frames).to eq [ 255, 0, 0, 0, 255, 0, 0, 0,
-                                                   255, 0, 0, 0, 255, 0, 0, 0,
-                                                   255, 0, 0, 0, 255, 255, 255, 255]
+      it 'reverses the indices of the pixels being set' do
+        strip.set_pixel(0, red[:rgb], test_brightness[:value])
+        expect(base.led_frames[frame_at_pixel(2)]).to eq test_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(0)]).not_to eq test_brightness[:led_frame] + red[:rgb]
       end
     end
 
-    describe 'altering the rbg array' do
+    context 'reversed rgb offsets' do
+      before(:each) do
+        strip.led_frame_rgb_offsets = {
+          red: 3,
+          green: 2,
+          blue: 1
+        }
+      end
       after(:each) do
-        strip.led_frame_rgb_offsets = {red: 3, green: 2, blue: 1}
+        strip.led_frame_rgb_offsets = base.led_frame_rgb_offsets
       end
 
-      it 'should be able to read and alter the rgb array' do
-        expect(strip.led_frame_rgb_offsets).to be_a_kind_of Hash
-        expect(strip.led_frame_rgb_offsets).to eq({red: 3, green: 2, blue: 1})
-
-        strip.led_frame_rgb_offsets = {red: 3, green: 1, blue: 2}
-        expect(strip.led_frame_rgb_offsets).to eq({red: 3, green: 1, blue: 2})
+      it 'changes which led frames receive pixel color data' do
+        strip.set_pixel(0, red[:rgb])
+        expect(base.led_frames[frame_at_pixel(0)]).not_to eq test_brightness[:led_frame] + red[:rgb].reverse
       end
+    end
+  end
 
-      it 'should set pixels correctly when the array is altered' do
-        strip.led_frame_rgb_offsets = {red: 3, green: 1, blue: 2}
-        strip.set_pixel(0, [10,100,255])
-        expect(Apa102Rbpi.base.led_frames[0..3]).to eq [255, 100, 255, 10]
-      end
+  describe '#set_all_pixels' do
+    it 'sets all pixels to a single color and brightness' do
+      strip.set_all_pixels(red[:rgb], test_brightness[:value])
+
+      expect(base.led_frames[frame_at_pixel(0)]).to eq test_brightness[:led_frame] + red[:rgb]
+      expect(base.led_frames[frame_at_pixel(1)]).to eq test_brightness[:led_frame] + red[:rgb]
+      expect(base.led_frames[frame_at_pixel(2)]).to eq test_brightness[:led_frame] + red[:rgb]
     end
   end
 
   describe 'mirroring' do
     let(:entire_strip) { Apa102Rbpi.strip }
-    let(:top_strip) { Apa102Rbpi::Strip.new([0,2]) }
-    let(:bottom_strip) { Apa102Rbpi::Strip.new([3,5]) }
+    let(:strip1) { Apa102Rbpi::Strip.new([0,2]) }
+    let(:strip2) { Apa102Rbpi::Strip.new([3,5]) }
+    let(:strip3) { Apa102Rbpi::Strip.new([6,8]) }
 
-    it 'should be able to create a mirror out of multiple strips' do
-      entire_strip.clear!
-      top_strip.mirror(bottom_strip)
-      top_strip.set_pixel(2, 0xffff00)
+    it 'lets mirrored strips have pixels set simultaneously' do
+      strip1.mirror(strip2)
+      strip2.mirror(strip3)
 
-      expect(top_strip.mirrors.length).to eq 1
-      expect(top_strip.mirrors.first).to eq bottom_strip
-
-      expect(Apa102Rbpi.base.led_frames).to eq [255, 0, 0, 0, 255, 0, 0, 0,
-                                                255, 0, 255, 255, 255, 0, 0, 0,
-                                                255, 0, 0, 0, 255, 0, 255, 255 ]
+      strip1.set_pixel(0, red[:rgb])
+      expect(base.led_frames[frame_at_pixel(0)]).to eq default_brightness[:led_frame] + red[:rgb]
+      expect(base.led_frames[frame_at_pixel(3)]).to eq default_brightness[:led_frame] + red[:rgb]
+      expect(base.led_frames[frame_at_pixel(6)]).to eq default_brightness[:led_frame] + red[:rgb]
     end
   end
+end
+
+def frame_at_pixel(pixel_idx)
+  idx = pixel_idx * 4
+  Range.new(idx, idx + 3)
 end

@@ -1,3 +1,5 @@
+require 'spec_helper'
+
 describe 'Utility Functions' do
   let(:klass)  { Class.new { extend Apa102Rbpi } }
   let(:red)    {{ hex: 0xFF0000, rgb: [255, 0, 0] }}
