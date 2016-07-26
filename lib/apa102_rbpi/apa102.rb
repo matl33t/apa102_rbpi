@@ -18,7 +18,7 @@ module Apa102Rbpi
         red: 3,
         green: 2,
         blue: 1
-       }
+      }
       @spi_hz = 8000000
       @simulate = false
 
@@ -26,10 +26,7 @@ module Apa102Rbpi
       @start_frame = [0x00] * 4
       @end_frame = calculate_end_frame
 
-
       @led_frames = []
-      @substrips = {}
-      @mirrors = {}
     end
 
     def simulate=(bool)
@@ -46,12 +43,8 @@ module Apa102Rbpi
       @end_frame = calculate_end_frame
     end
 
-    def calculate_end_frame
-      [0x00] * (@num_leds / 2.0).ceil
-    end
-
     def show!
-      interface.begin do |s|
+      @interface.begin do |s|
         s.clock(@spi_hz)
         s.write(@start_frame + @led_frames + @end_frame)
       end
@@ -59,6 +52,12 @@ module Apa102Rbpi
 
     def print
       ::Apa102Rbpi::SpiSimulator.display(@led_frames)
+    end
+
+    private
+
+    def calculate_end_frame
+      [0x00] * (@num_leds / 2.0).ceil
     end
   end
 end

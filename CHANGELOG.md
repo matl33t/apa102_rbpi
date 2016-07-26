@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1
+- Improve set_pixel performance
+- Add a benchmark script
+- `strip.mirrors` no longer writable
+- Added `strip.clear_mirrors` method used to unmirror a strip.
+
 ## 1.0.1
 - Fix bug with `set` not being required
 - Add `set_all_pixels` functionality to strip

@@ -97,7 +97,8 @@ describe Apa102Rbpi::Strip do
 
       it 'changes which led frames receive pixel color data' do
         strip.set_pixel(0, red[:rgb])
-        expect(base.led_frames[frame_at_pixel(0)]).not_to eq test_brightness[:led_frame] + red[:rgb].reverse
+        expect(base.led_frames[frame_at_pixel(0)]).to eq default_brightness[:led_frame] + red[:rgb].reverse
+        expect(base.led_frames[frame_at_pixel(0)]).not_to eq default_brightness[:led_frame] + red[:rgb]
       end
     end
   end
@@ -117,15 +118,87 @@ describe Apa102Rbpi::Strip do
     let(:strip1) { Apa102Rbpi::Strip.new([0,2]) }
     let(:strip2) { Apa102Rbpi::Strip.new([3,5]) }
     let(:strip3) { Apa102Rbpi::Strip.new([6,8]) }
+    let(:strip4) { Apa102Rbpi::Strip.new([9,11]) }
 
-    it 'lets mirrored strips have pixels set simultaneously' do
-      strip1.mirror(strip2)
-      strip2.mirror(strip3)
+    describe '#mirror' do
+      it 'lets mirrored strips have pixels set simultaneously' do
+        strip1.mirror(strip2)
+        strip2.mirror(strip3)
 
-      strip1.set_pixel(0, red[:rgb])
-      expect(base.led_frames[frame_at_pixel(0)]).to eq default_brightness[:led_frame] + red[:rgb]
-      expect(base.led_frames[frame_at_pixel(3)]).to eq default_brightness[:led_frame] + red[:rgb]
-      expect(base.led_frames[frame_at_pixel(6)]).to eq default_brightness[:led_frame] + red[:rgb]
+        strip1.set_pixel(2, red[:rgb])
+        expect(base.led_frames[frame_at_pixel(2)]).to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(5)]).to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(8)]).to eq default_brightness[:led_frame] + red[:rgb]
+
+        expect(base.led_frames[frame_at_pixel(0)]).not_to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(3)]).not_to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(6)]).not_to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(9)]).not_to eq default_brightness[:led_frame] + red[:rgb]
+      end
+
+      it 'correctly sets pixels for two unmirrored pairs of mirrored strips' do
+        strip1.mirror(strip2)
+        strip3.mirror(strip4)
+
+        strip1.set_pixel(1, green[:rgb])
+        strip3.set_pixel(1, blue[:rgb])
+        expect(base.led_frames[frame_at_pixel(1)]).to eq default_brightness[:led_frame] + green[:rgb]
+        expect(base.led_frames[frame_at_pixel(4)]).to eq default_brightness[:led_frame] + green[:rgb]
+        expect(base.led_frames[frame_at_pixel(7)]).to eq default_brightness[:led_frame] + blue[:rgb]
+        expect(base.led_frames[frame_at_pixel(10)]).to eq default_brightness[:led_frame] + blue[:rgb]
+
+        expect(base.led_frames[frame_at_pixel(2)]).not_to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(5)]).not_to eq default_brightness[:led_frame] + green[:rgb]
+        expect(base.led_frames[frame_at_pixel(8)]).not_to eq default_brightness[:led_frame] + blue[:rgb]
+        expect(base.led_frames[frame_at_pixel(11)]).not_to eq default_brightness[:led_frame] + red[:rgb]
+      end
+
+      it 'correctly sets pixels for two mirrored pairs of mirrored strips' do
+        strip1.mirror(strip2)
+        strip3.mirror(strip4)
+        strip1.mirror(strip4)
+
+        strip1.set_pixel(0, red[:rgb])
+        expect(base.led_frames[frame_at_pixel(0)]).to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(3)]).to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(6)]).to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(9)]).to eq default_brightness[:led_frame] + red[:rgb]
+
+        expect(base.led_frames[frame_at_pixel(2)]).not_to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(5)]).not_to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(8)]).not_to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(11)]).not_to eq default_brightness[:led_frame] + red[:rgb]
+      end
+    end
+
+    describe '#clear_mirrors' do
+      it 'makes a strip no longer mirror any other strip' do
+        strip1.mirror(strip2)
+        strip3.mirror(strip4)
+        strip1.mirror(strip4)
+
+        strip1.set_pixel(0, red[:rgb])
+        expect(base.led_frames[frame_at_pixel(0)]).to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(3)]).to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(6)]).to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(9)]).to eq default_brightness[:led_frame] + red[:rgb]
+
+        strip1.clear
+        strip1.clear_mirrors
+        strip1.set_pixel(0, red[:rgb])
+        expect(base.led_frames[frame_at_pixel(0)]).to eq default_brightness[:led_frame] + red[:rgb]
+
+        expect(base.led_frames[frame_at_pixel(3)]).not_to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(6)]).not_to eq default_brightness[:led_frame] + red[:rgb]
+        expect(base.led_frames[frame_at_pixel(9)]).not_to eq default_brightness[:led_frame] + red[:rgb]
+
+        strip2.set_pixel(0, green[:rgb])
+        expect(base.led_frames[frame_at_pixel(0)]).not_to eq default_brightness[:led_frame] + green[:rgb]
+
+        expect(base.led_frames[frame_at_pixel(3)]).to eq default_brightness[:led_frame] + green[:rgb]
+        expect(base.led_frames[frame_at_pixel(6)]).to eq default_brightness[:led_frame] + green[:rgb]
+        expect(base.led_frames[frame_at_pixel(9)]).to eq default_brightness[:led_frame] + green[:rgb]
+      end
     end
   end
 end
