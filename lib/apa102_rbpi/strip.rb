@@ -1,5 +1,7 @@
 module Apa102Rbpi
   class Strip
+    require 'set'
+
     attr_reader :head, :tail, :num_leds, :base, :mirrors
     attr_accessor :led_frame_rgb_offsets, :brightness
 

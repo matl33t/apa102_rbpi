@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.1
+- Fix bug with `set` not being required that was reintroduced in 1.1
+
 ## 1.1
 - Improve set_pixel performance
 - Add a benchmark script
